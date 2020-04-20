@@ -47,6 +47,7 @@ int main(int argc, char** argv) {
                     read(i, read_str, 100);
                     printf("%d: %s\n", i, read_str);
                     memset(read_str,0,strlen(read_str));
+                    close(i);
                 }
             }
 
