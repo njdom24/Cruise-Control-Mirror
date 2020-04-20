@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <sys/select.h>
 #include <string.h>
@@ -27,7 +28,7 @@ int main(int argc, char** argv) {
     start_datastore(fd);
     start_curstate(fd2);
 
-    while(1) {
+    while(true) {
         fd_set temp = set;
         int ret = select(FD_SETSIZE, &temp, NULL, NULL, NULL);
 
@@ -51,6 +52,7 @@ int main(int argc, char** argv) {
 
         }
     }
+
 
     return 0;
 }
