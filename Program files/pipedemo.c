@@ -27,7 +27,12 @@ int main(int argc, char** argv) {
 
     start_datastore(fd);
     start_curstate(fd2);
-
+    if(close(fd[1]) == -1) {
+        fprintf(stderr, "Error: close failed.\n");
+    }
+    if(close(fd2[1]) == -1) {
+        fprintf(stderr, "Error: close failed.\n");
+    }
     while(true) {
         fd_set temp = set;
         int ret = select(FD_SETSIZE, &temp, NULL, NULL, NULL);
@@ -47,14 +52,6 @@ int main(int argc, char** argv) {
                     read(i, read_str, 100);
                     printf("%d: %s\n", i, read_str);
                     memset(read_str,0,strlen(read_str));
-                    if(close(fd[1]) == -1) {
-                        fprintf(stderr, "Error: close failed.\n");
-		                return EXIT_FAILURE;
-                    }
-                    if(close(fd2[1]) == -1) {
-                        fprintf(stderr, "Error: close failed.\n");
-		                return EXIT_FAILURE;
-                    }
                 }
             }
 
