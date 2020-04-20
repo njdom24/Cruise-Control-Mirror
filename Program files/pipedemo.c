@@ -47,7 +47,10 @@ int main(int argc, char** argv) {
                     read(i, read_str, 100);
                     printf("%d: %s\n", i, read_str);
                     memset(read_str,0,strlen(read_str));
-                    close(i);
+                    if(close(i) == -1) {
+                        fprintf(stderr, "Error: close failed. %s.\n", strerror(errno));
+		                return EXIT_FAILURE;
+                    }
                 }
             }
 
