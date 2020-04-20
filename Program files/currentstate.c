@@ -12,4 +12,5 @@ int start_curstate(int fd[2]) {
         }
         exit(0);
     }
+    return 1;
 }

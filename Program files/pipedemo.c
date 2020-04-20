@@ -47,8 +47,12 @@ int main(int argc, char** argv) {
                     read(i, read_str, 100);
                     printf("%d: %s\n", i, read_str);
                     memset(read_str,0,strlen(read_str));
-                    if(close(i) == -1) {
-                        fprintf(stderr, "Error: close failed. %s.\n");
+                    if(close(fd[1]) == -1) {
+                        fprintf(stderr, "Error: close failed.\n");
+		                return EXIT_FAILURE;
+                    }
+                    if(close(fd2[1]) == -1) {
+                        fprintf(stderr, "Error: close failed.\n");
 		                return EXIT_FAILURE;
                     }
                 }
@@ -56,7 +60,5 @@ int main(int argc, char** argv) {
 
         }
     }
-
-
     return 0;
 }
