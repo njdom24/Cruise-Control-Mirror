@@ -27,6 +27,12 @@ int main(int argc, char** argv) {
 
     start_datastore(fd);
     start_curstate(fd2);
+    if(atoi(((char*)fd2[1])[0]) > 110 || atoi(((char*)fd2[1])[0]) < 20) {
+        fd2[1]=fd2[0];
+        //!!this may be the wrong way to change the contents of the fd
+        fprintf(stdout, "WARNING: Cannot initiate CC outside the range of 20mph to 110mph\n");
+        //!!later replace stdout with file to alert the user
+    }
     if(close(fd[1]) == -1) {
         fprintf(stderr, "Error: close failed.\n");
     }
