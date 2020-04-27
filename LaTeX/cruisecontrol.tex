@@ -30,8 +30,8 @@
 	Ryan Mullens \\
 	Alex Heifler \\ \\
 	I pledge my honor that I have abided by the Stevens Honor System. \\ \\
-	April 4th, 2020 \\ \\
-	Version 0.09
+	April 26th, 2020 \\ \\
+	Version 1.00
 }
 \date{}
 
@@ -47,7 +47,7 @@
 	\fancypagestyle{plain}{
 		\fancyhf{}
 		\fancyhead[L]{Michael Chunko, Dominick DiMaggio, Ryan Mullens, Alex Heifler \\ Professor Peyrovian}
-		\fancyhead[R]{CS 347 \\ 4 April 2020}
+		\fancyhead[R]{CS 347 \\ 26 April 2020}
 		\renewcommand{\headrulewidth}{.4pt}
 		\fancyfoot[c]{\thepage}
 	}
@@ -62,7 +62,7 @@
 	\indent\indent The goal of this project is to create an effective cruise control software. The software will be designed so as to run on an embedded system that meets all the stakeholders’ requirements. The software will focus on having an intuitive user experience, so that the user will be able to focus on the road as much as possible. Additionally, the cruise control software will include safety features so as to ensure that the driver is completely safe and and to allow the driver to have a functional cruise control system. 	
 	
 	\section{Introduction}
-	\indent\indent The purpose of our team is to create a cruise control software which runs from an embedded system placed in a contemporary vehicle. There are easily many risks associated with the automation of something so finely managed. Thus the code generated will be rigorously and frequently tested to ensure that there are no unintended or otherwise undesired functionalities in our product. Our cruise control software will be able to assist drivers on the road to drive safely and comfortably. The purpose of our team’s software is to do this well, while ensuring the driver first and foremost remains in control of the vehicle. To that end, we want to stay out of the driver’s way as much as possible, instead working purely to enhance the driving experience and avoiding anything overbearing that would be considered a hindrance. \\
+	\indent\indent Our team's goal is to create a cruise control software which runs from an embedded system placed in a contemporary vehicle. There are easily many risks associated with the automation of something so finely managed. Thus the code generated will be rigorously and frequently tested to ensure that there are no unintended or otherwise undesired functionalities in our product. Our cruise control software will be able to assist drivers on the road to drive safely and comfortably. The purpose of our team’s software is to do this well, while ensuring the driver first and foremost remains in control of the vehicle. To that end, we want to stay out of the driver’s way as much as possible, instead working purely to enhance the driving experience and avoiding anything overbearing that would be considered a hindrance. \\
 	
 	\indent Drivers traveling long distances often become fatigued after staying on the road for an extended period of time. Thanks to our cruise control implementation, the driver will be enabled to make the choice to let their car handle its speed, automatically staying in line with the speed set out by the user. As a result, our software will give users the reprieve they need to remain energized during their potentially long commute. \\
 	
@@ -78,7 +78,7 @@
 		\item[3.1.2.] The cruise control will deactivate by the user pressing the brakes
 		\item[3.1.3.] The cruise control will temporarily deactivate while the throttle is pressed, then return to the set speed after the throttle is released
 		\item[3.1.4.] The cruise control will have its initial speed set to be the user's current driving speed
-		\item[3.1.5.] The cruise control will have its speed adjusted in 1mph increments via an input device
+		\item[3.1.5.] The cruise control will have its speed adjusted in 1 mph increments via an input device
 		\item[3.1.6.] The cruise control will log the cruise control speed, if it was activated/deactivated, \textit{why} it was deactivated, and the time all of this occurred
 		\item[3.1.7.] The cruise control will use output devices to inform the user of its activation, automatic deactivation, set speed, and if it cannot activate due to too low/high speed
 	\end{enumerate}
@@ -93,12 +93,12 @@
 		\begin{enumerate}
 			\item[3.2.2.a.] This part of the system is real time and mission critical -- even a small delay could result in accidents occurring 
 		\end{enumerate}
-		\item[3.2.3.] The cruise control will stay within 0.5mph of the set speed as anything more could result in a negative user experience
-		\item[3.2.4.] The cruise control will only work between 25mph (residential road speed limit) and 110mph
+		\item[3.2.3.] The cruise control will stay within 0.5 mph of the set speed as anything more could result in a negative user experience
+		\item[3.2.4.] The cruise control will only work between 25 mph (residential road speed limit) and 110 mph
 		\item[3.2.5.] The cruise control will provide a good user experience
 		\begin{enumerate}
 			\item[3.2.5.a.] The user should be able to easily use the cruise control system with no prior experience
-			\item[3.2.5.b.] The use should be easily made aware of all the info (3.1.7) that they need to know through the output device(s)
+			\item[3.2.5.b.] The user should be easily made aware of all the info (3.1.7) that they need to know through the output device(s)
 		\end{enumerate}
 	\end{enumerate}
 	
@@ -388,7 +388,7 @@
 		\end{itemize}	
 	\end{enumerate}
 	
-	\ \\ \indent Our design will follow the model view controller (MVC) architecture. The vehicle is expected to provide I/O (3.3.5--3.3.7) and will make up the model, with input being passed to the inner level of our C code that will handle system--level functions. The MVC architecture enables the system to report back to the user anything that happened within the system. The underlying system will follow a data--centered architecture, handling all I/O file descriptors in a centralized data component for ease of management.
+	\ \\ \indent Our design will follow the model view controller (MVC) architecture. The vehicle is expected to provide I/O (3.3.5--3.3.7) and will make up the model, with input being passed to the inner level of our C code which will handle system--level functions. The MVC architecture enables the system to report back to the user anything that has happened within the system. The underlying system will follow a data--centered architecture, handling all I/O file descriptors in a centralized data component for ease of management.
 	
 	\subsection{Components, Connectors, Constraints}
 	\indent\indent The components are as follows:
@@ -509,8 +509,7 @@
 	\begin{itemize}
 		\item There is no known way to detect system startup completion. The software, when launched, will need to be able to figure out if all devices are active and working. During this time frame, the user may try to activate cruise control, so it is necessary to figure out a way to get the system giving feedback to the user as soon as possible. --- Dom
 		\item A list of potential errors and responses must be created for problem diagnosis. The output the user may see can vary depending on the manufacturer's implementation of the display protocol. Therefore the cruise control software must provide a standard set of outputs that manufacturers can expect to hook into. --- Ryan
-		\item The log must be able to handle the case wherein the storage is full. Perhaps the cruise control software will one day make it into a car that lasts forever; the log file will eventually fill up. Some method must be developed to avoid the log file from becoming ineffective. --- Michael
-		
+		\item The log must be able to handle the case wherein the storage is full. Perhaps the cruise control software will one day make it into a car that lasts forever; in reality this cannot be expected and the log file \textit{will} eventually fill up. Some method must be developed to avoid the log file from becoming ineffective. --- Michael
 	\end{itemize}
 	
 \end{document}
