@@ -12,6 +12,7 @@ int start_curstate(int fd[2]) {
                 //
             }
             write(fd[1], speeds, strlen(speeds));
+            free(speeds);
             sleep(3);
         }
         exit(0);
