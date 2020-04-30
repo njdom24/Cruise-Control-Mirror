@@ -34,12 +34,13 @@ int main(int argc, char** argv) {
         set_speed = buf[1];
         current_speed = buf[0];
         if(set_speed <= 110 && set_speed >= 20) {
+            current_speed=set_speed;
             fd2[1]=fd2[0];
-            write(stdout,"User changed set speed\n",24);
+            fprintf(stdout,"User changed set speed to %i\n", current_speed);
         }
         else {
-            write(stderr, "WARNING: Cannot initiate CC outside the range of 20mph to 110mph\n", 66);
-            write(stdout,"User attempted to initiate CC outside of permitted range\n", 58);
+            write(STDERR_FILENO, "WARNING: Cannot initiate CC outside the range of 20mph to 110mph\n", 66);
+            write(STDOUT_FILENO,"User attempted to initiate CC outside of permitted range\n", 58);
         }
     }
     if(close(fd[1]) == -1) {
