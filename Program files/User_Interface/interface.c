@@ -48,9 +48,9 @@ int main(int argc, char** argv) {
     speed_slider = GTK_ADJUSTMENT(gtk_builder_get_object(gtkBuilder, "speed_change"));
     log_text = GTK_TEXT_BUFFER(gtk_builder_get_object(gtkBuilder, "log_buffer"));
 
-    char *buffer = "Hello world!";
+    char *buffer = "Hello world!!!";
     gtk_text_buffer_set_text(log_text, buffer, strlen(buffer));
-
+    
 
     g_signal_connect (cc_switch, "notify::active", G_CALLBACK (cc_change_state), speed_slider);
     g_signal_connect (window, "delete-event", G_CALLBACK (delete_event), NULL);
