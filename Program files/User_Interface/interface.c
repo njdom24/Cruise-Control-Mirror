@@ -1,9 +1,11 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <gtk/gtk.h>
 
 //TODO create a global to send info to whatever writes to the log
 gdouble CC_set_speed;
+bool CC_activated;
 
 static gboolean delete_event(GtkWidget *widget, GdkEvent *event, gpointer data ){
     g_print ("delete event occurred\n");
@@ -18,10 +20,13 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer user_dat
     printf("Switch clicked\n");
     GtkAdjustment *speed_slider = user_data;
     if (gtk_switch_get_active (GTK_SWITCH (widget))) {
+        CC_activated = true;
         printf("Enabled\n");
+        CC_set_speed = gtk_adjustment_get_value (user_data);//replace this with the spinbutton value
         gtk_adjustment_set_value (GTK_ADJUSTMENT (speed_slider), CC_set_speed);
     }
     else {
+        CC_activated = false;
         printf("Disabled\n");
         gtk_adjustment_set_value (GTK_ADJUSTMENT (speed_slider), 0.0);
     }
@@ -29,11 +34,19 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer user_dat
 
 //TODO create a void function that will monitor changes to the scroller while CC is active
 //line 79 of the latex says the system will return to set speed when the user releases the scroller??
-//if the user sets the speed to a lower value then disable with 'gtk_switch_set_active(false);'
+//if the user sets the speed to a lower value then disable with 'gtk_switch_set_active(false);' to simulate braking
 
 void refresh_speed (GtkWidget *spin_button) {
-    CC_set_speed = gtk_spin_button_get_value (GTK_SPIN_BUTTON (spin_button));
-   // gtk_spin_button_set_value (GTK_SPIN_BUTTON (spin_button), 50);
+    printf("set speed changed\n");
+    if(CC_activated) {
+        CC_set_speed = gtk_spin_button_get_value (GTK_SPIN_BUTTON (spin_button));
+        //TODO from here call the line below to alter the slider
+        //gtk_adjustment_set_value (GTK_ADJUSTMENT (speed_slider), CC_set_speed);
+    } else {
+        //fprintf(stderr, "user tried to alter undefined CC_set_speed\n");
+        gtk_spin_button_set_value (GTK_SPIN_BUTTON (spin_button), 0.0);
+    }
+   // 
     
 }
 
