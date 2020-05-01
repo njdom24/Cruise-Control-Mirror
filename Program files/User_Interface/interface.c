@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <gtk/gtk.h>
 
+
+gdouble CC_set_speed;
+
 static gboolean delete_event(GtkWidget *widget, GdkEvent *event, gpointer data ){
     g_print ("delete event occurred\n");
     return FALSE;
@@ -16,14 +19,16 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer user_dat
 
     if (gtk_switch_get_active (GTK_SWITCH (widget))) {
         printf("Enabled\n");
+        gtk_adjustment_set_value (GTK_ADJUSTMENT (speed_slider), CC_set_speed);
     }
     else {
         printf("Disabled\n");
+        GtkAdjustment *speed_slider = user_data;
+        CC_set_speed = gtk_adjustment_get_value (user_data);
     }
 
-    //Testing, sets slider to 0
-    GtkAdjustment *speed_slider = user_data;
-    gtk_adjustment_set_value (GTK_ADJUSTMENT (speed_slider), 0.0);
+    
+    
 }
 
 void refresh_speed (GtkWidget *spin_button) {
