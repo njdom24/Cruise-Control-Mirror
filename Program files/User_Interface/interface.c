@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <gtk/gtk.h>
 
-
+//TODO create a global to send info to whatever writes to the log
 gdouble CC_set_speed;
 
 static gboolean delete_event(GtkWidget *widget, GdkEvent *event, gpointer data ){
@@ -19,19 +19,21 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer user_dat
     GtkAdjustment *speed_slider = user_data;
     if (gtk_switch_get_active (GTK_SWITCH (widget))) {
         printf("Enabled\n");
-        CC_set_speed = gtk_adjustment_get_value (user_data);
         gtk_adjustment_set_value (GTK_ADJUSTMENT (speed_slider), CC_set_speed);
     }
     else {
         printf("Disabled\n");
+        gtk_adjustment_set_value (GTK_ADJUSTMENT (speed_slider), 0.0);
     }
-
-    
-    
 }
 
+//TODO create a void function that will monitor changes to the scroller while CC is active
+//line 79 of the latex says the system will return to set speed when the user releases the scroller??
+//if the user sets the speed to a lower value then disable with 'gtk_switch_set_active(false);'
+
 void refresh_speed (GtkWidget *spin_button) {
-    gtk_spin_button_set_value (GTK_SPIN_BUTTON (spin_button), 50);
+    CC_set_speed = gtk_spin_button_get_value (GTK_SPIN_BUTTON (spin_button));
+   // gtk_spin_button_set_value (GTK_SPIN_BUTTON (spin_button), 50);
     
 }
 
@@ -60,6 +62,8 @@ int main(int argc, char** argv) {
     g_signal_connect (cc_switch, "notify::active", G_CALLBACK (cc_change_state), speed_slider);
     g_signal_connect (window, "delete-event", G_CALLBACK (delete_event), NULL);
     g_signal_connect (window, "destroy", G_CALLBACK (destroy), NULL);
+    g_signal_connect (spin_button, "value-changed", G_CALLBACK(refresh_speed), spin_button);
+
 
     gtk_widget_show_all(window);
 
