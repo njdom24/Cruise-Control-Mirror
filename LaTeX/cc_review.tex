@@ -1,0 +1,60 @@
+\documentclass{article}
+\usepackage[margin=1.3in]{geometry}
+\usepackage{fancyhdr}
+\usepackage{amsmath}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{amssymb}
+\usepackage{setspace}
+\usepackage{bm}
+\usepackage{ragged2e}
+\usepackage{multirow}
+\usepackage{fancyhdr}
+\usepackage{pgf-umlcd}
+
+\title{Formal Technical Review Summary Report}
+\date{May 5, 2020}
+
+\begin{document}
+	\fancypagestyle{plain}{
+		\fancyhf{}
+		\fancyhead[L]{Michael Chunko, Dominick DiMaggio, Ryan Mullens, Alex Heifler \\ Professor Peyrovian}
+		\fancyhead[R]{CS 347 \\ 5 May 2020}
+		\renewcommand{\headrulewidth}{.4pt}
+		\fancyfoot[c]{\thepage}
+	}
+	
+	\pagestyle{plain}
+	\maketitle
+	
+	\indent The formal technical review was conducted by Michael Chunko, Dominick DiMaggio, Alex Heifler, and Ryan Mullens. \\
+	
+	The cruise control software document and the current iteration of the code were reviewed. Michael Chunko and Ryan Mullens reviewed the cruise control software while Alex Heifler and Dominick DiMaggio reviewed the cruise control code. The review issues list is as follows: \\
+	
+	\begin{enumerate}
+		\item Due to being written in sections over a long stretch of time, wording in parts of the cruise control software document may be inconsistent
+		\begin{enumerate}
+			\item Ryan Mullens will thoroughly read through the document, correcting any wording or phrasing that may be inconsistent
+		\end{enumerate}
+	
+		\item As our ideas for the cruise control software have developed and software development has begun, parts of the cruise control software document and the UML models used may have become out of date
+		\begin{enumerate}
+			\item Michael Chunko will carefully read through the software document, checking to see if any parts are out of date with the current understanding of the cruise control software
+			\item If any parts are categorized as out of date, they will be updated appropriately
+		\end{enumerate}
+	
+		\item Since the cruise control software has only been worked on by members of the team, it may be that parts of the user experience have become poor without us realizing
+		\begin{enumerate}
+			\item Dominick DiMaggio will ask for feedback on the user experience  of the cruise control software from individuals that have never used it before
+			\item The user experience elements will be modified in accordance with this feedback
+		\end{enumerate}
+	
+		\item Bugs introduced during development may change the behavior of the cruise control in unexpected ways that remain undiscovered for multiple iterations, potentially until after release
+		\begin{enumerate}
+			\item Alex Heifler will formally create a list of requirements and expected behavior for the cruise control software in the form of unit test
+			\item These unit tests will be run after every update to the cruise control software to ensure minimal bugs have been introduced
+		\end{enumerate}
+	\end{enumerate}
+
+	None of the errors we found were major, rather they can all safely be categorized as minor errors. As a result, we have decided to accept the product provisionally. We believe that all of the errors encountered can be corrected without the need for additional review
+\end{document}
