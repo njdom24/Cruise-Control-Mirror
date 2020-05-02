@@ -136,23 +136,64 @@
             <property name="can_focus">False</property>
             <property name="margin_right">30</property>
             <property name="margin_top">25</property>
+            <property name="margin_bottom">13</property>
             <property name="label_xalign">0.5</property>
             <property name="shadow_type">none</property>
             <child>
-              <object class="GtkAlignment">
+              <object class="GtkGrid">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="left_padding">12</property>
+                <property name="halign">center</property>
                 <child>
-                  <object class="GtkScale" id="speed_scale">
+                  <object class="GtkLabel" id="speed_lbl">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="margin_bottom">4</property>
+                    <property name="label" translatable="yes">N/A</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                    <property name="width">3</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToggleButton" id="brake_btn">
+                    <property name="label" translatable="yes">Brake</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="halign">baseline</property>
-                    <property name="valign">start</property>
-                    <property name="adjustment">speed_change</property>
-                    <property name="upper_stepper_sensitivity">off</property>
-                    <property name="round_digits">0</property>
+                    <property name="receives_default">True</property>
+                    <property name="margin_right">25</property>
                   </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToggleButton" id="gas_small_btn">
+                    <property name="label" translatable="yes">Gas (Low)</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="margin_right">25</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
+                    <property name="top_attach">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToggleButton" id="gas_lrg_btn">
+                    <property name="label" translatable="yes">Gas (High)</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">2</property>
+                    <property name="top_attach">1</property>
+                  </packing>
                 </child>
               </object>
             </child>
@@ -160,7 +201,8 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Current Speed</property>
+                <property name="margin_bottom">4</property>
+                <property name="label" translatable="yes">Current Speed:</property>
               </object>
             </child>
           </object>

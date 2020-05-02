@@ -18,17 +18,48 @@ static void destroy(GtkWidget *widget, GdkEvent *event, gpointer data){
 
 gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer user_data) {
     printf("Switch clicked\n");
-    GtkAdjustment *speed_slider = user_data;
+    
     if (gtk_switch_get_active (GTK_SWITCH (widget))) {
         CC_activated = true;
         printf("Enabled\n");
         CC_set_speed = gtk_adjustment_get_value (user_data);//replace this with the spinbutton value
-        gtk_adjustment_set_value (GTK_ADJUSTMENT (speed_slider), CC_set_speed);
     }
     else {
         CC_activated = false;
         printf("Disabled\n");
-        gtk_adjustment_set_value (GTK_ADJUSTMENT (speed_slider), 0.0);
+    }
+}
+
+void brake_onclick (GtkToggleButton *src, gpointer user_data) {
+    if (gtk_toggle_button_get_active(src)) {
+        printf("Brake enabled\n");
+    }
+    else {
+        printf("Brake disabled\n");
+    }
+}
+
+void accel_slow_onclick (GtkToggleButton *src, gpointer user_data) {
+    GtkWidget *fast_button = GTK_WIDGET(user_data);
+
+    if (gtk_toggle_button_get_active(src)) {
+        printf("Slow accel enabled\n");
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(fast_button), FALSE);
+    }
+    else {
+        printf("Slow accel disabled\n");
+    }
+}
+
+void accel_fast_onclick (GtkToggleButton *src, gpointer user_data) {
+    GtkWidget *slow_button = user_data;
+
+    if (gtk_toggle_button_get_active(src)) {
+        printf("Fast accel enabled\n");
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(slow_button), FALSE);
+    }
+    else {
+        printf("Fast accel disabled\n");
     }
 }
 
@@ -40,8 +71,6 @@ void refresh_speed (GtkWidget *spin_button) {
     printf("set speed changed\n");
     if(CC_activated) {
         CC_set_speed = gtk_spin_button_get_value (GTK_SPIN_BUTTON (spin_button));
-        //TODO from here call the line below to alter the slider
-        //gtk_adjustment_set_value (GTK_ADJUSTMENT (speed_slider), CC_set_speed);
     } else {
         //fprintf(stderr, "user tried to alter undefined CC_set_speed\n");
         gtk_spin_button_set_value (GTK_SPIN_BUTTON (spin_button), 0.0);
@@ -56,7 +85,7 @@ int main(int argc, char** argv) {
     GtkWidget *window;
     GtkWidget *cc_switch;
     GtkWidget *spin_button;
-    GtkAdjustment *speed_slider;
+    GtkWidget *brake_btn, *accel_slow_btn, *accel_fast_btn;
     GtkTextBuffer *log_text;
 
     gtk_init(&argc, &argv);
@@ -65,18 +94,23 @@ int main(int argc, char** argv) {
     window = GTK_WIDGET(gtk_builder_get_object(gtkBuilder, "window2"));
     cc_switch = GTK_WIDGET(gtk_builder_get_object(gtkBuilder, "cc_state"));
     spin_button = GTK_WIDGET(gtk_builder_get_object(gtkBuilder, "cc_update_speed"));
-    speed_slider = GTK_ADJUSTMENT(gtk_builder_get_object(gtkBuilder, "speed_change"));
+
+    brake_btn = GTK_WIDGET(gtk_builder_get_object(gtkBuilder, "brake_btn"));
+    accel_slow_btn = GTK_WIDGET(gtk_builder_get_object(gtkBuilder, "gas_small_btn"));
+    accel_fast_btn = GTK_WIDGET(gtk_builder_get_object(gtkBuilder, "gas_lrg_btn"));
+
     log_text = GTK_TEXT_BUFFER(gtk_builder_get_object(gtkBuilder, "log_buffer"));
 
     char *buffer = "Hello world!!!";
     gtk_text_buffer_set_text(log_text, buffer, strlen(buffer));
     
-
-    g_signal_connect (cc_switch, "notify::active", G_CALLBACK (cc_change_state), speed_slider);
     g_signal_connect (window, "delete-event", G_CALLBACK (delete_event), NULL);
     g_signal_connect (window, "destroy", G_CALLBACK (destroy), NULL);
     g_signal_connect (spin_button, "value-changed", G_CALLBACK(refresh_speed), spin_button);
 
+    g_signal_connect (brake_btn, "toggled", G_CALLBACK(brake_onclick), NULL);
+    g_signal_connect (accel_slow_btn, "toggled", G_CALLBACK(accel_slow_onclick), accel_fast_btn);
+    g_signal_connect (accel_fast_btn, "toggled", G_CALLBACK(accel_fast_onclick), accel_slow_btn);
 
     gtk_widget_show_all(window);
 
