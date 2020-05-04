@@ -30,6 +30,8 @@ double set_speed;
 double initiate_CC(double current_speed);
 bool deactivate_CC();
 double change_CC_set_speed(double usr_set_speed);
+void hit_the_brakes();
+
 
 double initiate_CC(double current_speed) {
 	//NOTE: returns -1 on a failure to initiate cruising and the set speed on Success
@@ -62,6 +64,7 @@ bool deactivate_CC() {
 		//write(LOG_FILENO, "User attempted to deactivate uninitiated or idle CC\n", 53);
 		return state;
 	}
+	//write(LOG_FILENO, "Deactivating CC\n", 17);
 	state = false;
 	set_speed = 0;
 	return !state;
@@ -85,5 +88,11 @@ double change_CC_set_speed(double usr_set_speed) {
 	set_speed = usr_set_speed;
 	return usr_set_speed;
 }
+void hit_the_brakes() {
+	printf("Braking detected, deactivating CC\n");
+	//write(LOG_FILENO, "Braking detected, deactivating CC\n", 35);
+	deactivate_CC();
+}
+
 
 #endif
