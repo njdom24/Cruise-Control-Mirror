@@ -3,11 +3,18 @@
 #include <stdlib.h>
 #include <gtk/gtk.h>
 
-//TODO create a global to send info to whatever writes to the log
-gdouble CC_set_speed;
-bool CC_activated;
+#include <time.h>
 
-static gboolean delete_event(GtkWidget *widget, GdkEvent *event, gpointer data ){
+struct speed_buttons {
+    GtkToggleButton *brake_btn, *slow_btn, *fast_btn;
+};
+
+//TODO create a global to send info to whatever writes to the log
+double last_time;
+gdouble current_speed, target_speed, adj_speed;
+bool cc_activated;
+
+static gboolean delete_event(GtkWidget *widget, GdkEvent *event, gpointer data){
     g_print ("delete event occurred\n");
     return FALSE;
 }
@@ -16,35 +23,46 @@ static void destroy(GtkWidget *widget, GdkEvent *event, gpointer data){
     gtk_main_quit ();
 }
 
-gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer user_data) {
+gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
     printf("Switch clicked\n");
-    
+    GtkWidget *spin_button = data;
+
     if (gtk_switch_get_active (GTK_SWITCH (widget))) {
-        CC_activated = true;
+        cc_activated = true;
         printf("Enabled\n");
-        CC_set_speed = gtk_adjustment_get_value (user_data);//replace this with the spinbutton value
     }
     else {
-        CC_activated = false;
+        gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button), 0.0);
+        printf("%lf\n", gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button)));
+
+        cc_activated = false;
         printf("Disabled\n");
     }
 }
 
 void brake_onclick (GtkToggleButton *src, gpointer user_data) {
     if (gtk_toggle_button_get_active(src)) {
+        struct speed_buttons *btns = user_data;
+        target_speed = 0.0;
+
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->slow_btn), FALSE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->fast_btn), FALSE);
         printf("Brake enabled\n");
     }
     else {
+        target_speed = current_speed;
         printf("Brake disabled\n");
     }
 }
 
 void accel_slow_onclick (GtkToggleButton *src, gpointer user_data) {
-    GtkWidget *fast_button = GTK_WIDGET(user_data);
-
     if (gtk_toggle_button_get_active(src)) {
+        struct speed_buttons *btns = user_data;
+        target_speed = 20.0;
+
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->fast_btn), FALSE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->brake_btn), FALSE);
         printf("Slow accel enabled\n");
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(fast_button), FALSE);
     }
     else {
         printf("Slow accel disabled\n");
@@ -52,11 +70,13 @@ void accel_slow_onclick (GtkToggleButton *src, gpointer user_data) {
 }
 
 void accel_fast_onclick (GtkToggleButton *src, gpointer user_data) {
-    GtkWidget *slow_button = user_data;
-
     if (gtk_toggle_button_get_active(src)) {
+        struct speed_buttons *btns = user_data;
+        target_speed = 60.0;
+
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->slow_btn), FALSE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->brake_btn), FALSE);
         printf("Fast accel enabled\n");
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(slow_button), FALSE);
     }
     else {
         printf("Fast accel disabled\n");
@@ -68,24 +88,50 @@ void accel_fast_onclick (GtkToggleButton *src, gpointer user_data) {
 //if the user sets the speed to a lower value then disable with 'gtk_switch_set_active(false);' to simulate braking
 
 void refresh_speed (GtkWidget *spin_button) {
-    printf("set speed changed\n");
-    if(CC_activated) {
-        CC_set_speed = gtk_spin_button_get_value (GTK_SPIN_BUTTON (spin_button));
+    if(cc_activated) {
+        printf("set speed changed\n");
+        adj_speed = gtk_spin_button_get_value (GTK_SPIN_BUTTON (spin_button));
     } else {
-        //fprintf(stderr, "user tried to alter undefined CC_set_speed\n");
-        gtk_spin_button_set_value (GTK_SPIN_BUTTON (spin_button), 0.0);
+        gtk_spin_button_set_value (GTK_SPIN_BUTTON (spin_button), adj_speed);
     }
-   // 
-    
 }
 
+GtkLabel *speed_lbl;
+//Main loop, executes when no other code is being executed
+guint idle_function() {
+    double cur_time = clock();
+    double dt = (cur_time - last_time) / 40000;
+
+    if(current_speed < target_speed) {
+        current_speed += dt;
+
+        if(current_speed >= target_speed)
+            current_speed = target_speed;
+    }
+    else if(current_speed > target_speed) {
+        current_speed -= dt;
+
+        if(current_speed <= target_speed)
+            current_speed = target_speed;
+    }
+
+    char speed_lbl_text[7];
+    sprintf(speed_lbl_text, "%0.2f", current_speed);
+    gtk_label_set_text(speed_lbl, speed_lbl_text);
+
+    last_time = cur_time;
+    return TRUE;
+}
 
 int main(int argc, char** argv) {
+    current_speed = 0.0;
+    adj_speed = 0.0;
+    clock_t before = clock();
+
     GtkBuilder *gtkBuilder;
     GtkWidget *window;
     GtkWidget *cc_switch;
     GtkWidget *spin_button;
-    GtkWidget *brake_btn, *accel_slow_btn, *accel_fast_btn;
     GtkTextBuffer *log_text;
 
     gtk_init(&argc, &argv);
@@ -95,25 +141,36 @@ int main(int argc, char** argv) {
     cc_switch = GTK_WIDGET(gtk_builder_get_object(gtkBuilder, "cc_state"));
     spin_button = GTK_WIDGET(gtk_builder_get_object(gtkBuilder, "cc_update_speed"));
 
-    brake_btn = GTK_WIDGET(gtk_builder_get_object(gtkBuilder, "brake_btn"));
-    accel_slow_btn = GTK_WIDGET(gtk_builder_get_object(gtkBuilder, "gas_small_btn"));
-    accel_fast_btn = GTK_WIDGET(gtk_builder_get_object(gtkBuilder, "gas_lrg_btn"));
+    struct speed_buttons btns = {
+        GTK_TOGGLE_BUTTON(gtk_builder_get_object(gtkBuilder, "brake_btn")),
+        GTK_TOGGLE_BUTTON(gtk_builder_get_object(gtkBuilder, "gas_small_btn")),
+        GTK_TOGGLE_BUTTON(gtk_builder_get_object(gtkBuilder, "gas_lrg_btn"))
+    };
 
+    speed_lbl = GTK_LABEL(gtk_builder_get_object(gtkBuilder, "speed_lbl"));
     log_text = GTK_TEXT_BUFFER(gtk_builder_get_object(gtkBuilder, "log_buffer"));
 
-    char *buffer = "Hello world!!!";
+    char buffer[] = "Hello world!!!";
     gtk_text_buffer_set_text(log_text, buffer, strlen(buffer));
     
     g_signal_connect (window, "delete-event", G_CALLBACK (delete_event), NULL);
     g_signal_connect (window, "destroy", G_CALLBACK (destroy), NULL);
-    g_signal_connect (spin_button, "value-changed", G_CALLBACK(refresh_speed), spin_button);
-
-    g_signal_connect (brake_btn, "toggled", G_CALLBACK(brake_onclick), NULL);
-    g_signal_connect (accel_slow_btn, "toggled", G_CALLBACK(accel_slow_onclick), accel_fast_btn);
-    g_signal_connect (accel_fast_btn, "toggled", G_CALLBACK(accel_fast_onclick), accel_slow_btn);
+    g_signal_connect (spin_button, "value-changed", G_CALLBACK(refresh_speed), NULL);
+    g_signal_connect (cc_switch, "notify::active", G_CALLBACK(cc_change_state), spin_button);
+    g_signal_connect (btns.brake_btn, "toggled", G_CALLBACK(brake_onclick), &btns);
+    g_signal_connect (btns.slow_btn, "toggled", G_CALLBACK(accel_slow_onclick), &btns);
+    g_signal_connect (btns.fast_btn, "toggled", G_CALLBACK(accel_fast_onclick), &btns);
 
     gtk_widget_show_all(window);
 
+    char speed_lbl_text[80];
+    sprintf(speed_lbl_text, "Value of Pi = %0.2f", 69.69696969);
+    gtk_label_set_text(speed_lbl, speed_lbl_text);
+
+    printf("Finished with %d ms\n", (clock() - before) * 1000 / CLOCKS_PER_SEC);
+
+    gdk_threads_add_idle (G_SOURCE_FUNC(idle_function), NULL);
+    last_time = clock();
     gtk_main();
     printf("Exited successfully\n");
     return 0;
