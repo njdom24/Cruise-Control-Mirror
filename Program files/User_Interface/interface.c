@@ -28,11 +28,15 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
     GtkWidget *spin_button = data;
 
     if (gtk_switch_get_active (GTK_SWITCH (widget))) {
-
-        current_speed=initiate_CC((double)(current_speed));
-
-        cc_activated = true;
-        printf("Enabled\n");
+        if(initiate_CC((double)(current_speed))>0) {
+            current_speed = set_speed;
+            adj_speed = set_speed;
+            cc_activated = true;
+            printf("Enabled\n");
+        } else {
+            printf("CC did not activate\n");
+            //TODO: toggle button
+        }
     }
     else {
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button), 0.0);
