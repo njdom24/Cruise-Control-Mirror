@@ -5,7 +5,7 @@ else
 	gcc interface.o -o window.out `pkg-config --cflags --libs gtk+-3.0`
 endif
 
-interface.o: interface.c
+interface.o: interface.c functions.h
 	gcc interface.c -c `pkg-config --cflags --libs gtk+-3.0` -static
 
 clean:
