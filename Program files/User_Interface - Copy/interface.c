@@ -4,6 +4,7 @@
 #include <gtk/gtk.h>
 
 #include <time.h>
+#include "functions.h"
 
 struct speed_buttons {
     GtkToggleButton *brake_btn, *slow_btn, *fast_btn;
@@ -28,13 +29,21 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
     GtkWidget *spin_button = data;
 
     if (gtk_switch_get_active (GTK_SWITCH (widget))) {
+        if(initiate_CC((double)(current_speed))>0) {
+            current_speed = set_speed;
+            adj_speed = set_speed;
             cc_activated = true;
             printf("Enabled\n");
+        } else {
+            printf("CC did not activate\n");
+            //TODO: toggle button
+        }
     }
     else {
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button), 0.0);
         printf("%lf\n", gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button)));
 
+        deactivate_CC();
 
         cc_activated = false;
         printf("Disabled\n");
@@ -42,6 +51,7 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
 }
 
 void brake_onclick (GtkToggleButton *src, gpointer user_data) {
+    hit_the_brakes();
     if (gtk_toggle_button_get_active(src)) {
         struct speed_buttons *btns = user_data;
         target_speed = 0.0;
@@ -92,7 +102,10 @@ void refresh_speed (GtkWidget *spin_button) {
     if(cc_activated) {
         
         adj_speed = gtk_spin_button_get_value (GTK_SPIN_BUTTON (spin_button));
-        printf("set speed changed\n");
+        if(change_CC_set_speed(adj_speed) == adj_speed) {
+            current_speed = set_speed;
+            printf("set speed changed\n");
+        }
     } else {
         gtk_spin_button_set_value (GTK_SPIN_BUTTON (spin_button), adj_speed);
     }
