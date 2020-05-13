@@ -28,13 +28,12 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
     GtkWidget *spin_button = data;
 
     if (gtk_switch_get_active (GTK_SWITCH (widget))) {
-            cc_activated = true;
-            printf("Enabled\n");
+        cc_activated = true;
+        printf("Enabled\n");
     }
     else {
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button), 0.0);
         printf("%lf\n", gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button)));
-
 
         cc_activated = false;
         printf("Disabled\n");
@@ -44,14 +43,15 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
 void brake_onclick (GtkToggleButton *src, gpointer user_data) {
     if (gtk_toggle_button_get_active(src)) {
         struct speed_buttons *btns = user_data;
-        target_speed = 0.0;
+        target_speed /= 2.0;
 
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->slow_btn), FALSE);
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->fast_btn), FALSE);
+        //gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->slow_btn), FALSE);
+        //gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->fast_btn), FALSE);
         printf("Brake enabled\n");
     }
     else {
-        target_speed = current_speed;
+        target_speed *= 2.0;
+        //target_speed = current_speed;
         printf("Brake disabled\n");
     }
 }
@@ -59,11 +59,17 @@ void brake_onclick (GtkToggleButton *src, gpointer user_data) {
 void accel_slow_onclick (GtkToggleButton *src, gpointer user_data) {
     if (gtk_toggle_button_get_active(src)) {
         struct speed_buttons *btns = user_data;
-        target_speed = 20.0;
+
+        if (gtk_toggle_button_get_active(btns->brake_btn))
+            target_speed = 10.0;
+        else    
+            target_speed = 20.0;
 
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->fast_btn), FALSE);
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->brake_btn), FALSE);
+        //gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->brake_btn), FALSE);
         printf("Slow accel enabled\n");
+        printf("Target speed: %lf\n", target_speed);
+        printf("Current speed: %lf\n", current_speed);
     }
     else {
         printf("Slow accel disabled\n");
@@ -73,10 +79,14 @@ void accel_slow_onclick (GtkToggleButton *src, gpointer user_data) {
 void accel_fast_onclick (GtkToggleButton *src, gpointer user_data) {
     if (gtk_toggle_button_get_active(src)) {
         struct speed_buttons *btns = user_data;
-        target_speed = 60.0;
+
+        if (gtk_toggle_button_get_active(btns->brake_btn))
+            target_speed = 30.0;
+        else    
+            target_speed = 60.0;
 
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->slow_btn), FALSE);
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->brake_btn), FALSE);
+        //gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->brake_btn), FALSE);
         printf("Fast accel enabled\n");
     }
     else {
@@ -84,15 +94,13 @@ void accel_fast_onclick (GtkToggleButton *src, gpointer user_data) {
     }
 }
 
-//TODO create a void function that will monitor changes to the scroller while CC is active
 //line 79 of the latex says the system will return to set speed when the user releases the scroller??
 //if the user sets the speed to a lower value then disable with 'gtk_switch_set_active(false);' to simulate braking
 
 void refresh_speed (GtkWidget *spin_button) {
     if(cc_activated) {
-        
-        adj_speed = gtk_spin_button_get_value (GTK_SPIN_BUTTON (spin_button));
         printf("set speed changed\n");
+        adj_speed = gtk_spin_button_get_value (GTK_SPIN_BUTTON (spin_button));
     } else {
         gtk_spin_button_set_value (GTK_SPIN_BUTTON (spin_button), adj_speed);
     }
