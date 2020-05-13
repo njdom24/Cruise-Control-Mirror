@@ -106,23 +106,52 @@ void refresh_speed (GtkWidget *spin_button) {
     }
 }
 
+//Backend code begin
+
+void cc_update(double dt) {
+    double new_target = target_speed + adj_speed;
+    //printf("New speed: %lf\n", new_target);
+    printf("Current speed: %lf\n", current_speed);
+    //Backend speed control
+    if(current_speed < new_target) {
+        current_speed += dt;
+        printf("Increasing");
+        if(current_speed >= new_target)
+            current_speed = new_target;
+    }
+    else if(current_speed > new_target) {
+        current_speed -= dt;
+
+        if(current_speed <= new_target)
+            current_speed = new_target;
+    }
+}
+
+//Backend code end
+
 GtkLabel *speed_lbl;
 //Main loop, executes when no other code is being executed
 guint idle_function() {
     double cur_time = clock();
     double dt = (cur_time - last_time) / 40000;
 
-    if(current_speed < target_speed) {
-        current_speed += dt;
 
-        if(current_speed >= target_speed)
-            current_speed = target_speed;
-    }
-    else if(current_speed > target_speed) {
-        current_speed -= dt;
+    if(cc_activated)
+        cc_update(dt);
+    else {
+        //Ui-side speed control
+        if(current_speed < target_speed) {
+            current_speed += dt;
 
-        if(current_speed <= target_speed)
-            current_speed = target_speed;
+            if(current_speed >= target_speed)
+                current_speed = target_speed;
+        }
+        else if(current_speed > target_speed) {
+            current_speed -= dt;
+
+            if(current_speed <= target_speed)
+                current_speed = target_speed;
+        }
     }
 
     char speed_lbl_text[7];
@@ -135,6 +164,9 @@ guint idle_function() {
 
 int main(int argc, char** argv) {
     current_speed = 0.0;
+    target_speed = 0.0;
+
+    //To be used exclusively by the cruise control
     adj_speed = 0.0;
     clock_t before = clock();
 
