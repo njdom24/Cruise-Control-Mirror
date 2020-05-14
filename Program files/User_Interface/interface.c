@@ -73,7 +73,8 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
     struct speed_buttons *btns = data;
 
     if (gtk_switch_get_active (GTK_SWITCH (widget))) {
-        if(gtk_toggle_button_get_active(btns->brake_btn)) {
+        if(gtk_toggle_button_get_active(btns->brake_btn) || current_speed < 25.0) {
+            fprintf(stderr, "CC failed to activate; Requirements not met\n");
             gtk_switch_set_active(GTK_SWITCH(widget), FALSE);
             return TRUE;
         }
