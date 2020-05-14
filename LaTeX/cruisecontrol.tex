@@ -11,6 +11,9 @@
 \usepackage{multirow}
 \usepackage{fancyhdr}
 \usepackage{pgf-umlcd}
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
 \usepackage{tikz}
 \usetikzlibrary{automata, positioning, arrows, shapes.geometric}
 
@@ -31,7 +34,7 @@
 	Alex Heifler \\ \\
 	I pledge my honor that I have abided by the Stevens Honor System. \\ \\
 	May 14th, 2020 \\ \\
-	Version 1.03
+	Version 1.04
 }
 \date{}
 
@@ -66,7 +69,7 @@
 	
 	\indent Drivers traveling long distances often become fatigued after staying on the road for an extended period of time. Thanks to our cruise control implementation, the driver will be enabled to make the choice to let their car handle its speed, automatically staying in line with the speed set out by the user. As a result, our software will give users the reprieve they need to remain energized during their potentially long commute. \\
 	
-	\indent A cruise control system is mission-critical. There is no room for error or unexpected behavior. It is important that nothing is unexpected, lest an accident occur. Our software intends to carry minimal overhead, through use of planned programming practices and optimizations, and leveraging the fact that we are working close to the hardware on this system. During the software development process, our code will be tested thoroughly for fast response times, primarily in response to the driver’s input, but also in interfacing with the sensors across the vehicle that we require for accurate operation. Test cases, use cases, and software specifications will be set concretely by an Agile development process and regular scrums between the team and stakeholders, to ensure that the software will closely match the desired specifications and meet all use cases. \\
+	\indent A cruise control system is mission-critical. There is no room for error or unexpected behavior. It is important that nothing is unexpected, lest an accident occur. Our software intends to carry minimal overhead, through use of planned programming practices and optimizations, and leveraging the fact that we are working close to the hardware on this system. During the software development, our code will be tested thoroughly for fast response times, primarily in response to the driver’s input, but also in interfacing with the sensors across the vehicle that we require for accurate operation. Test cases, use cases, and software specifications will be set concretely by an Agile development process and regular scrums between the team and stakeholders, to ensure that the software will closely match the desired specifications and meet all use cases. \\
 	
 	\indent We also would like to iterate that responsiveness and effectiveness are not viewed as mutually exclusive. On that thread, we refuse to consider that our software will be working in a pristine environment. While software does not deteriorate in quality, hardware certainly does. Mitigating hardware malfunctions is a major objective throughout our design. Through internal testing and with input from many drivers, we will produce a product that will never leave the driver in a position that will hurt them, regardless of potential hardware failure. More on this will be specified as our process matures.
 	
@@ -509,7 +512,50 @@
 	\indent\indent Please see the ``Program Files" folder on the project Gitlab.
 	
 	\section{Tests}
-	\indent\indent Please see ``Program Files/tests.c" on the project Gitlab.
+	\indent\indent Requirements that have been passed will be marked with a \cmark\  or \xmark\  to indicate that they were met or not met respectively. More detail will be provided as needed.
+	\subsection{Functional Requirements Review}
+	\begin{enumerate}
+		\item[\cmark 3.1.1.] The cruise control will activate/deactivate via an input device
+		\item[\cmark 3.1.2.] The cruise control will deactivate by the user pressing the brakes
+		\item[\cmark 3.1.3.] The cruise control will temporarily deactivate while the throttle is pressed, then return to the set speed after the throttle is released
+		\item[\cmark 3.1.4.] The cruise control will have its initial speed set to be the user's current driving speed
+		\item[\cmark 3.1.5.] The cruise control will have its speed adjusted in 1 mph increments via an input device
+		\item[\cmark 3.1.6.] The cruise control will log the cruise control speed, if it was activated/deactivated, \textit{why} it was deactivated, and the time all of this occurred
+		\item[\cmark 3.1.7.] The cruise control will use output devices to inform the user of its activation, automatic deactivation, set speed, and if it cannot activate due to too low/high speed
+		\begin{enumerate}
+			\item[7.1.7.] This info is currently output to the cruise control log, but it would be trivial for a manufacturer to search the log for this info and output it to the user
+		\end{enumerate}
+	\end{enumerate}
+	
+	\subsection{Non--Functional Requirements Review}
+	\begin{enumerate}
+		\item[\cmark 3.2.1.] The cruise control will be highly reliable
+		\begin{enumerate}
+			\item[3.2.1.a.] It will have a reliability rate equal to or greater than four nines (99.99\%)
+			\item[7.2.1.] No bugs have been found in the release version of the cruise control software and all unit tests pass
+		\end{enumerate}
+		\item[\cmark 3.2.2.] The cruise control will react to being activated/deactivated, speed adjustments, and the user pressing the brakes/throttle in 100ms or less
+		\begin{enumerate}
+			\item[3.2.2.a.] This part of the system is real time and mission critical -- even a small delay could result in accidents occurring 
+		\end{enumerate}
+		\item[\cmark 3.2.3.] The cruise control will stay within 0.5 mph of the set speed as anything more could result in a negative user experience
+		\item[\cmark 3.2.4.] The cruise control will only work between 25 mph (residential road speed limit) and 110 mph
+		\item[\cmark 3.2.5.] The cruise control will provide a good user experience
+		\begin{enumerate}
+			\item[3.2.5.a.] The user should be able to easily use the cruise control system with no prior experience
+			\item[3.2.5.b.] The user should be easily made aware of all the info (3.1.7) that they need to know through the output device(s)
+			\item[7.2.5.] User feedback has been very positive based on our testing.
+		\end{enumerate}
+	\end{enumerate}
+	
+	\subsection{Sensor \& Hardware Requirements Review}
+	\indent\indent These are up to the manufacturer to implement
+	
+	\subsection{Security Requirements}
+	All but 3.4.5 is up to the manufacturer to implement
+	\begin{enumerate}
+		\item[\cmark 3.4.5.] The cruise control shall have no connection to the internet, Bluetooth, or other similar networks
+	\end{enumerate}
 	
 	\section{Issues \& Resolutions}
 	\subsection{Issues}
