@@ -186,7 +186,7 @@ void accel_fast_onclick (GtkToggleButton *src, gpointer user_data) {
     struct speed_buttons *btns = user_data;
     if (gtk_toggle_button_get_active(src)) {
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->slow_btn), FALSE);
-        
+
         if (gtk_toggle_button_get_active(btns->brake_btn))
             target_speed = 30.0;
         else    
@@ -225,7 +225,7 @@ guint idle_function(struct speed_buttons *btns) {
     double cur_time = clock();
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
         double dt = (cur_time - last_time) / 40;
-    #elif __linux__
+    #else
         double dt = (cur_time - last_time) / 40000;
     #endif    
 
