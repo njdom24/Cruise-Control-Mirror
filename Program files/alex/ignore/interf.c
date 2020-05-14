@@ -4,6 +4,7 @@
 #include <gtk/gtk.h>
 
 #include <time.h>
+#include "functions.h"
 
 struct speed_buttons {
     GtkToggleButton *brake_btn, *slow_btn, *fast_btn;
@@ -11,50 +12,8 @@ struct speed_buttons {
 
 //TODO create a global to send info to whatever writes to the log
 double last_time;
-gdouble current_speed, target_speed;
-
-//CC variables
-enum state {suspended, active};
-enum state cur_state;
-double adj_speed;
+gdouble current_speed, target_speed, adj_speed;
 bool cc_activated;
-
-//Backend code begin
-
-void cc_activate() {
-    //State will remain suspended until the user steps off the gas
-    cur_state = suspended;
-    cc_activated = true;
-}
-
-void cc_update_speed(double dt) {
-    double new_target = target_speed + adj_speed;
-    //printf("New speed: %lf\n", new_target);
-    printf("Current speed: %lf\n", current_speed);
-    //Backend speed control
-    if(current_speed < new_target) {
-        current_speed += dt/4;
-        printf("Increasing\n");
-        if(current_speed >= new_target)
-            current_speed = new_target;
-    }
-    else if(current_speed > new_target) {
-        current_speed -= dt/4;
-
-        if(current_speed <= new_target)
-            current_speed = new_target;
-    }
-}
-
-void cc_update(double dt) {
-    switch(cur_state) {
-        case active:
-            cc_update_speed(dt);
-    }
-    
-}
-
-//Backend code end
 
 static gboolean delete_event(GtkWidget *widget, GdkEvent *event, gpointer data){
     g_print ("delete event occurred\n");
@@ -70,12 +29,21 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
     GtkWidget *spin_button = data;
 
     if (gtk_switch_get_active (GTK_SWITCH (widget))) {
-        cc_activate();
-        printf("Enabled\n");
+        if(initiate_CC((double)(current_speed))>0) {
+            current_speed = set_speed;
+            adj_speed = set_speed;
+            cc_activated = true;
+            printf("Enabled\n");
+        } else {
+            printf("CC did not activate\n");
+            //TODO: toggle button
+        }
     }
     else {
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin_button), 0.0);
         printf("%lf\n", gtk_spin_button_get_value(GTK_SPIN_BUTTON(spin_button)));
+
+        deactivate_CC();
 
         cc_activated = false;
         printf("Disabled\n");
@@ -83,74 +51,61 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
 }
 
 void brake_onclick (GtkToggleButton *src, gpointer user_data) {
+    hit_the_brakes();
     if (gtk_toggle_button_get_active(src)) {
         struct speed_buttons *btns = user_data;
-        
-        if (gtk_toggle_button_get_active(btns->fast_btn) || gtk_toggle_button_get_active(btns->slow_btn))
-            target_speed /= 2.0;
-        else
-            target_speed = 0.0;    
+        target_speed = 0.0;
 
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->slow_btn), FALSE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->fast_btn), FALSE);
         printf("Brake enabled\n");
     }
     else {
-        target_speed *= 2.0;
-        //target_speed = current_speed;
+        target_speed = current_speed;
         printf("Brake disabled\n");
     }
 }
 
 void accel_slow_onclick (GtkToggleButton *src, gpointer user_data) {
-    struct speed_buttons *btns = user_data;
     if (gtk_toggle_button_get_active(src)) {
-        if (gtk_toggle_button_get_active(btns->brake_btn))
-            target_speed = 10.0;
-        else    
-            target_speed = 20.0;
+        struct speed_buttons *btns = user_data;
+        target_speed = 20.0;
 
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->fast_btn), FALSE);
-
-        cur_state = suspended;
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->brake_btn), FALSE);
         printf("Slow accel enabled\n");
     }
     else {
-        if (gtk_toggle_button_get_active(btns->brake_btn))
-            target_speed = 0.0;
-
-        cur_state = active;    
         printf("Slow accel disabled\n");
     }
 }
 
 void accel_fast_onclick (GtkToggleButton *src, gpointer user_data) {
-    struct speed_buttons *btns = user_data;
     if (gtk_toggle_button_get_active(src)) {
-        if (gtk_toggle_button_get_active(btns->brake_btn))
-            target_speed = 30.0;
-        else    
-            target_speed = 60.0;
+        struct speed_buttons *btns = user_data;
+        target_speed = 60.0;
 
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->slow_btn), FALSE);
-
-        cur_state = suspended;
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->brake_btn), FALSE);
         printf("Fast accel enabled\n");
     }
     else {
-        if (gtk_toggle_button_get_active(btns->brake_btn))
-            target_speed = 0.0;
-
-        cur_state = active;
         printf("Fast accel disabled\n");
     }
 }
 
+//TODO create a void function that will monitor changes to the scroller while CC is active
 //line 79 of the latex says the system will return to set speed when the user releases the scroller??
 //if the user sets the speed to a lower value then disable with 'gtk_switch_set_active(false);' to simulate braking
 
 void refresh_speed (GtkWidget *spin_button) {
     if(cc_activated) {
-        printf("set speed changed\n");
+        
         adj_speed = gtk_spin_button_get_value (GTK_SPIN_BUTTON (spin_button));
+        if(change_CC_set_speed(adj_speed) == adj_speed) {
+            current_speed = set_speed;
+            printf("set speed changed\n");
+        }
     } else {
         gtk_spin_button_set_value (GTK_SPIN_BUTTON (spin_button), adj_speed);
     }
@@ -162,29 +117,17 @@ guint idle_function() {
     double cur_time = clock();
     double dt = (cur_time - last_time) / 40000;
 
-    if(cc_activated) {
-        switch (cur_state) {
-            case suspended:
-                goto default_update;
-            case active:
-                cc_update(dt);
-        }
+    if(current_speed < target_speed) {
+        current_speed += dt;
+
+        if(current_speed >= target_speed)
+            current_speed = target_speed;
     }
-    else {
-        default_update:
-        //Car-side speed control
-        if(current_speed < target_speed) {
-            current_speed += dt;
+    else if(current_speed > target_speed) {
+        current_speed -= dt;
 
-            if(current_speed >= target_speed)
-                current_speed = target_speed;
-        }
-        else if(current_speed > target_speed) {
-            current_speed -= dt;
-
-            if(current_speed <= target_speed)
-                current_speed = target_speed;
-        }
+        if(current_speed <= target_speed)
+            current_speed = target_speed;
     }
 
     char speed_lbl_text[7];
@@ -197,9 +140,6 @@ guint idle_function() {
 
 int main(int argc, char** argv) {
     current_speed = 0.0;
-    target_speed = 0.0;
-
-    //To be used exclusively by the cruise control
     adj_speed = 0.0;
     clock_t before = clock();
 
