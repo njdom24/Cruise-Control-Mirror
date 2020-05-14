@@ -19,7 +19,7 @@
 #include <sys/select.h>
 #include <string.h>
 
-bool state;
+int state;
 double set_speed;
 
 //#define LOG_FILENO 10
