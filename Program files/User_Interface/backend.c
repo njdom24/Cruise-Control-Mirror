@@ -16,8 +16,14 @@ void cc_append_to_file(char string[], GtkTextBuffer *log_text) {
     char timestamp[25];
     sprintf(timestamp, "[%d-%02d-%02d %02d:%02d:%02d] ", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-    fprintf(fptr, timestamp);
-    fprintf(fptr, string);
+    //Recover if the log file is full
+    if(fprintf(fptr, timestamp) < 0 || fprintf(fptr, string) < 0) {
+        fclose(fptr);
+        fptr = fopen("cc.log", "w");
+        fprintf(fptr, timestamp);
+        fprintf(fptr, string);
+    }
+    
     fclose(fptr);
 
     gtk_text_buffer_insert_at_cursor(log_text, timestamp, strlen(timestamp));
