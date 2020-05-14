@@ -6,39 +6,22 @@
 
 #include "backend.h"
 
-gdouble current_speed, target_speed;
-
-enum state cur_state;
-double saved_speed, adj_speed;
-bool cc_activated;
-
-//TODO create a global to send info to whatever writes to the log
+//For frontend, stores the system clock value from last update
 double last_time;
 
+//Called on exiting program
 static gboolean delete_event(GtkWidget *widget, GdkEvent *event, gpointer data){
     g_print ("delete event occurred\n");
     return FALSE;
 }
 
+//Exits the program when closed out
 static void destroy(GtkWidget *widget, GdkEvent *event, gpointer data){
     gtk_main_quit ();
 }
 
-void refresh_speed (GtkWidget *spin_button, struct data_store *btns) {
-    if(cc_activated && cur_state == active) {
-        double temp_speed = gtk_spin_button_get_value (GTK_SPIN_BUTTON (spin_button));
-        if(temp_speed > adj_speed)
-            cc_append_to_file("CC speed increased\n", btns->log_text);
-        else if(temp_speed < adj_speed)
-            cc_append_to_file("CC speed decreased\n", btns->log_text);
-        adj_speed = temp_speed;    
-    } else {
-        gtk_spin_button_set_value (GTK_SPIN_BUTTON (spin_button), adj_speed);
-    }
-}
-
 GtkLabel *speed_lbl;
-//Main loop, executes when no other code is being executed
+//Executes backend thread code
 guint idle_function(struct data_store *btns) {
     double cur_time = clock();
     #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
@@ -57,7 +40,7 @@ guint idle_function(struct data_store *btns) {
     }
     else {
         default_update:
-        //Car-side speed control
+        //Car-side (frontend) speed control
         if(current_speed < target_speed) {
             current_speed += dt;
 
@@ -77,7 +60,6 @@ guint idle_function(struct data_store *btns) {
     if(min_speed == 25.0)
         min_speed = 0;
     int max_speed = 110.0 - saved_speed;
-    //printf("max_speed: %d\n", max_speed);
     gtk_spin_button_set_range(btns->spin_btn, min_speed, max_speed);
 
     char speed_lbl_text[7];
@@ -94,8 +76,7 @@ int main(int argc, char** argv) {
     current_speed = 0.0;
     target_speed = 0.0;
 
-    //To be used exclusively by the cruise control
-    adj_speed = 0.0;
+    //Speed adjustment, To be used exclusively by the cruise control
     clock_t before = clock();
 
     GtkBuilder *gtkBuilder;

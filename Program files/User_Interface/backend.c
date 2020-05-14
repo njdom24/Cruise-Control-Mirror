@@ -1,6 +1,11 @@
 #include "backend.h"
 
 bool force_disabled;
+gdouble current_speed, target_speed;
+
+enum state cur_state;
+double saved_speed, adj_speed = 0.0;
+bool cc_activated;
 
 void cc_append_to_file(char string[], GtkTextBuffer *log_text) {
     FILE *fptr = fopen("cc.log", "a");
@@ -67,6 +72,20 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
             force_disabled = FALSE;
         else
             cc_append_to_file("CC disabled by user\n", btns->log_text);
+    }
+}
+
+//Updates the speed display when adjusted
+void refresh_speed (GtkWidget *spin_button, struct data_store *btns) {
+    if(cc_activated && cur_state == active) {
+        double temp_speed = gtk_spin_button_get_value (GTK_SPIN_BUTTON (spin_button));
+        if(temp_speed > adj_speed)
+            cc_append_to_file("CC speed increased\n", btns->log_text);
+        else if(temp_speed < adj_speed)
+            cc_append_to_file("CC speed decreased\n", btns->log_text);
+        adj_speed = temp_speed;    
+    } else {
+        gtk_spin_button_set_value (GTK_SPIN_BUTTON (spin_button), adj_speed);
     }
 }
 
