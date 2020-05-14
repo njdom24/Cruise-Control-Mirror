@@ -43,10 +43,12 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
 void brake_onclick (GtkToggleButton *src, gpointer user_data) {
     if (gtk_toggle_button_get_active(src)) {
         struct speed_buttons *btns = user_data;
-        target_speed /= 2.0;
+        
+        if (gtk_toggle_button_get_active(btns->fast_btn) || gtk_toggle_button_get_active(btns->slow_btn))
+            target_speed /= 2.0;
+        else
+            target_speed = 0.0;    
 
-        //gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->slow_btn), FALSE);
-        //gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->fast_btn), FALSE);
         printf("Brake enabled\n");
     }
     else {
@@ -57,9 +59,8 @@ void brake_onclick (GtkToggleButton *src, gpointer user_data) {
 }
 
 void accel_slow_onclick (GtkToggleButton *src, gpointer user_data) {
+    struct speed_buttons *btns = user_data;
     if (gtk_toggle_button_get_active(src)) {
-        struct speed_buttons *btns = user_data;
-
         if (gtk_toggle_button_get_active(btns->brake_btn))
             target_speed = 10.0;
         else    
@@ -72,14 +73,15 @@ void accel_slow_onclick (GtkToggleButton *src, gpointer user_data) {
         printf("Current speed: %lf\n", current_speed);
     }
     else {
+        if (gtk_toggle_button_get_active(btns->brake_btn))
+            target_speed = 0.0;
         printf("Slow accel disabled\n");
     }
 }
 
 void accel_fast_onclick (GtkToggleButton *src, gpointer user_data) {
+    struct speed_buttons *btns = user_data;
     if (gtk_toggle_button_get_active(src)) {
-        struct speed_buttons *btns = user_data;
-
         if (gtk_toggle_button_get_active(btns->brake_btn))
             target_speed = 30.0;
         else    
@@ -90,6 +92,8 @@ void accel_fast_onclick (GtkToggleButton *src, gpointer user_data) {
         printf("Fast accel enabled\n");
     }
     else {
+        if (gtk_toggle_button_get_active(btns->brake_btn))
+            target_speed = 0.0;
         printf("Fast accel disabled\n");
     }
 }
@@ -135,11 +139,10 @@ guint idle_function() {
     double cur_time = clock();
     double dt = (cur_time - last_time) / 40000;
 
-
     if(cc_activated)
         cc_update(dt);
     else {
-        //Ui-side speed control
+        //Car-side speed control
         if(current_speed < target_speed) {
             current_speed += dt;
 
