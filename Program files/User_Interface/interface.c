@@ -134,7 +134,7 @@ void accel_slow_onclick (GtkToggleButton *src, gpointer user_data) {
     else {
         if (cc_activated)
             target_speed = saved_speed;
-        else
+        else if (!gtk_toggle_button_get_active(btns->fast_btn))
             target_speed = 0.0;
 
         cur_state = active;    
@@ -151,14 +151,14 @@ void accel_fast_onclick (GtkToggleButton *src, gpointer user_data) {
             target_speed = 60.0;
 
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->slow_btn), FALSE);
-
+        printf("Target speed: %lf\n", target_speed);
         cur_state = suspended;
         printf("Fast accel enabled\n");
     }
     else {
         if (cc_activated)
             target_speed = saved_speed;
-        else
+        else if (!gtk_toggle_button_get_active(btns->slow_btn))
             target_speed = 0.0;
 
         cur_state = active;
@@ -180,7 +180,7 @@ void refresh_speed (GtkWidget *spin_button) {
 
 GtkLabel *speed_lbl;
 //Main loop, executes when no other code is being executed
-guint idle_function() {
+guint idle_function(struct speed_buttons *btns) {
     double cur_time = clock();
     double dt = (cur_time - last_time) / 40000;
 
@@ -208,6 +208,8 @@ guint idle_function() {
                 current_speed = target_speed;
         }
     }
+
+    //gtk_spin_button_set_range(btns->spin_btn, 0, 100);
 
     char speed_lbl_text[7];
     sprintf(speed_lbl_text, "%0.2f", current_speed);
@@ -267,7 +269,7 @@ int main(int argc, char** argv) {
 
     printf("Finished with %d ms\n", (clock() - before) * 1000 / CLOCKS_PER_SEC);
 
-    gdk_threads_add_idle (G_SOURCE_FUNC(idle_function), NULL);
+    gdk_threads_add_idle (G_SOURCE_FUNC(idle_function), &btns);
     last_time = clock();
     gtk_main();
     printf("Exited successfully\n");
