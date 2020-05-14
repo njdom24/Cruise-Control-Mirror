@@ -73,10 +73,15 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
     struct speed_buttons *btns = data;
 
     if (gtk_switch_get_active (GTK_SWITCH (widget))) {
+        if(gtk_toggle_button_get_active(btns->brake_btn)) {
+            gtk_switch_set_active(GTK_SWITCH(widget), FALSE);
+            return TRUE;
+        }
+        
         cc_activate(current_speed);
         if (!gtk_toggle_button_get_active(btns->fast_btn) && !gtk_toggle_button_get_active(btns->slow_btn))
             cur_state = active;
-            
+
         printf("Enabled\n");
     }
     else {
