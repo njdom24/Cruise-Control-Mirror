@@ -11,8 +11,50 @@ struct speed_buttons {
 
 //TODO create a global to send info to whatever writes to the log
 double last_time;
-gdouble current_speed, target_speed, adj_speed;
+gdouble current_speed, target_speed;
+
+//CC variables
+enum state {suspended, active};
+enum state cur_state;
+double adj_speed;
 bool cc_activated;
+
+//Backend code begin
+
+void cc_activate() {
+    //State will remain suspended until the user steps off the gas
+    cur_state = suspended;
+    cc_activated = true;
+}
+
+void cc_update_speed(double dt) {
+    double new_target = target_speed + adj_speed;
+    //printf("New speed: %lf\n", new_target);
+    printf("Current speed: %lf\n", current_speed);
+    //Backend speed control
+    if(current_speed < new_target) {
+        current_speed += dt/4;
+        printf("Increasing\n");
+        if(current_speed >= new_target)
+            current_speed = new_target;
+    }
+    else if(current_speed > new_target) {
+        current_speed -= dt/4;
+
+        if(current_speed <= new_target)
+            current_speed = new_target;
+    }
+}
+
+void cc_update(double dt) {
+    switch(cur_state) {
+        case active:
+            cc_update_speed(dt);
+    }
+    
+}
+
+//Backend code end
 
 static gboolean delete_event(GtkWidget *widget, GdkEvent *event, gpointer data){
     g_print ("delete event occurred\n");
@@ -28,7 +70,7 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
     GtkWidget *spin_button = data;
 
     if (gtk_switch_get_active (GTK_SWITCH (widget))) {
-        cc_activated = true;
+        cc_activate();
         printf("Enabled\n");
     }
     else {
@@ -67,14 +109,15 @@ void accel_slow_onclick (GtkToggleButton *src, gpointer user_data) {
             target_speed = 20.0;
 
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->fast_btn), FALSE);
-        //gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->brake_btn), FALSE);
+
+        cur_state = suspended;
         printf("Slow accel enabled\n");
-        printf("Target speed: %lf\n", target_speed);
-        printf("Current speed: %lf\n", current_speed);
     }
     else {
         if (gtk_toggle_button_get_active(btns->brake_btn))
             target_speed = 0.0;
+
+        cur_state = active;    
         printf("Slow accel disabled\n");
     }
 }
@@ -88,12 +131,15 @@ void accel_fast_onclick (GtkToggleButton *src, gpointer user_data) {
             target_speed = 60.0;
 
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->slow_btn), FALSE);
-        //gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->brake_btn), FALSE);
+
+        cur_state = suspended;
         printf("Fast accel enabled\n");
     }
     else {
         if (gtk_toggle_button_get_active(btns->brake_btn))
             target_speed = 0.0;
+
+        cur_state = active;
         printf("Fast accel disabled\n");
     }
 }
@@ -110,38 +156,22 @@ void refresh_speed (GtkWidget *spin_button) {
     }
 }
 
-//Backend code begin
-
-void cc_update(double dt) {
-    double new_target = target_speed + adj_speed;
-    //printf("New speed: %lf\n", new_target);
-    printf("Current speed: %lf\n", current_speed);
-    //Backend speed control
-    if(current_speed < new_target) {
-        current_speed += dt;
-        printf("Increasing");
-        if(current_speed >= new_target)
-            current_speed = new_target;
-    }
-    else if(current_speed > new_target) {
-        current_speed -= dt;
-
-        if(current_speed <= new_target)
-            current_speed = new_target;
-    }
-}
-
-//Backend code end
-
 GtkLabel *speed_lbl;
 //Main loop, executes when no other code is being executed
 guint idle_function() {
     double cur_time = clock();
     double dt = (cur_time - last_time) / 40000;
 
-    if(cc_activated)
-        cc_update(dt);
+    if(cc_activated) {
+        switch (cur_state) {
+            case suspended:
+                goto default_update;
+            case active:
+                cc_update(dt);
+        }
+    }
     else {
+        default_update:
         //Car-side speed control
         if(current_speed < target_speed) {
             current_speed += dt;
