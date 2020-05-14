@@ -73,15 +73,18 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
     struct speed_buttons *btns = data;
 
     if (gtk_switch_get_active (GTK_SWITCH (widget))) {
-        if(gtk_toggle_button_get_active(btns->brake_btn) || current_speed < 25.0) {
+        if(gtk_toggle_button_get_active(btns->brake_btn) || current_speed < 25.0 || current_speed > 110.0) {
             fprintf(stderr, "CC failed to activate; Requirements not met\n");
             gtk_switch_set_active(GTK_SWITCH(widget), FALSE);
             return TRUE;
         }
         
         cc_activate(current_speed);
-        if (!gtk_toggle_button_get_active(btns->fast_btn) && !gtk_toggle_button_get_active(btns->slow_btn))
+        if (!gtk_toggle_button_get_active(btns->fast_btn) && !gtk_toggle_button_get_active(btns->slow_btn)) {
+            printf("Set to active: %lf\n", saved_speed);
+            target_speed = saved_speed;
             cur_state = active;
+        }
 
         printf("Enabled\n");
     }
@@ -209,7 +212,13 @@ guint idle_function(struct speed_buttons *btns) {
         }
     }
 
-    //gtk_spin_button_set_range(btns->spin_btn, 0, 100);
+    //Prevent the speed from adjusting outside the 25-110 mph range
+    int min_speed = 25.0 - saved_speed;
+    if(min_speed == 25.0)
+        min_speed = 0;
+    int max_speed = 110.0 - saved_speed;
+    //printf("max_speed: %d\n", max_speed);
+    gtk_spin_button_set_range(btns->spin_btn, min_speed, max_speed);
 
     char speed_lbl_text[7];
     sprintf(speed_lbl_text, "%0.2f", current_speed);
