@@ -161,12 +161,12 @@ void brake_onclick (GtkToggleButton *src, gpointer user_data) {
 void accel_slow_onclick (GtkToggleButton *src, gpointer user_data) {
     struct speed_buttons *btns = user_data;
     if (gtk_toggle_button_get_active(src)) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->fast_btn), FALSE);
+
         if (gtk_toggle_button_get_active(btns->brake_btn))
             target_speed = 10.0;
         else    
             target_speed = 20.0;
-
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->fast_btn), FALSE);
 
         cur_state = suspended;
         printf("Slow accel enabled\n");
@@ -185,12 +185,13 @@ void accel_slow_onclick (GtkToggleButton *src, gpointer user_data) {
 void accel_fast_onclick (GtkToggleButton *src, gpointer user_data) {
     struct speed_buttons *btns = user_data;
     if (gtk_toggle_button_get_active(src)) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->slow_btn), FALSE);
+        
         if (gtk_toggle_button_get_active(btns->brake_btn))
             target_speed = 30.0;
         else    
             target_speed = 60.0;
 
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(btns->slow_btn), FALSE);
         cur_state = suspended;
         printf("Fast accel enabled\n");
     }
@@ -222,7 +223,11 @@ GtkLabel *speed_lbl;
 //Main loop, executes when no other code is being executed
 guint idle_function(struct speed_buttons *btns) {
     double cur_time = clock();
-    double dt = (cur_time - last_time) / 40000;
+    #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
+        double dt = (cur_time - last_time) / 40;
+    #elif __linux__
+        double dt = (cur_time - last_time) / 40000;
+    #endif    
 
     if(cc_activated) {
         switch (cur_state) {
