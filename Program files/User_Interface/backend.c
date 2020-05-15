@@ -1,6 +1,11 @@
 #include "backend.h"
 
 bool force_disabled;
+gdouble current_speed, target_speed;
+
+enum state cur_state;
+double saved_speed, adj_speed = 0.0;
+bool cc_activated;
 
 void cc_append_to_file(char string[], GtkTextBuffer *log_text) {
     FILE *fptr = fopen("cc.log", "a");
@@ -11,8 +16,14 @@ void cc_append_to_file(char string[], GtkTextBuffer *log_text) {
     char timestamp[25];
     sprintf(timestamp, "[%d-%02d-%02d %02d:%02d:%02d] ", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-    fprintf(fptr, timestamp);
-    fprintf(fptr, string);
+    //Recover if the log file is full
+    if(fprintf(fptr, timestamp) < 0 || fprintf(fptr, string) < 0) {
+        fclose(fptr);
+        fptr = fopen("cc.log", "w");
+        fprintf(fptr, timestamp);
+        fprintf(fptr, string);
+    }
+    
     fclose(fptr);
 
     gtk_text_buffer_insert_at_cursor(log_text, timestamp, strlen(timestamp));
@@ -67,6 +78,20 @@ gboolean cc_change_state (GtkWidget *widget, GParamSpec *spec, gpointer data) {
             force_disabled = FALSE;
         else
             cc_append_to_file("CC disabled by user\n", btns->log_text);
+    }
+}
+
+//Updates the speed display when adjusted
+void refresh_speed (GtkWidget *spin_button, struct data_store *btns) {
+    if(cc_activated && cur_state == active) {
+        double temp_speed = gtk_spin_button_get_value (GTK_SPIN_BUTTON (spin_button));
+        if(temp_speed > adj_speed)
+            cc_append_to_file("CC speed increased\n", btns->log_text);
+        else if(temp_speed < adj_speed)
+            cc_append_to_file("CC speed decreased\n", btns->log_text);
+        adj_speed = temp_speed;    
+    } else {
+        gtk_spin_button_set_value (GTK_SPIN_BUTTON (spin_button), adj_speed);
     }
 }
 
